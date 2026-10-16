@@ -114,6 +114,7 @@ pnpm dev            # dev playground を HMR で起動
 pnpm build          # dist へライブラリを出力 (Vite library mode + vite-plugin-dts)
 pnpm preview        # build 成果物をローカル配信
 pnpm typecheck      # tsc --noEmit
+pnpm test:e2e       # Playwright で E2E テスト (初回は pnpm exec playwright install chromium)
 ```
 
 ## wasm の更新
