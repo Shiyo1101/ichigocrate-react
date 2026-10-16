@@ -35,6 +35,10 @@ export function App() {
 
 canvas をクリックしてフォーカスすればキーボードで直接操作できる (`PRINT "HI"` → Enter、`F5` で RUN、`ESC` で中断)。
 
+既定では canvas にフォーカスがある間 Tab キーも IchigoCrate の入力として捕捉する。ブログや
+ドキュメントに埋め込む場合は `captureTab={false}` を指定すると、Tab でフォーカスを外へ移せる
+(キーボードだけで操作する利用者が canvas から抜け出せなくなるのを防ぐ)。
+
 ## Props
 
 | prop                  | 型                               | 既定            | 説明                                                       |
@@ -49,6 +53,7 @@ canvas をクリックしてフォーカスすればキーボードで直接操�
 | `wasmUrl`             | `string`                         | —               | wasm の取得 URL (未指定なら同梱 base64 インライン版を使う) |
 | `scale`               | `number`                         | 3               | ピクセル拡大率 (論理 256×192 を CSS で何倍に表示するか)    |
 | `className` / `style` | —                                | —               | canvas へ渡すスタイル                                      |
+| `captureTab`          | `boolean`                        | true            | false で Tab を捕捉せずフォーカス移動に使う (埋め込み向け) |
 | `aria-label`          | `string`                         | `"IchigoCrate"` | canvas のアクセシブルな名前                                |
 | その他の canvas 属性  | —                                | —               | `aria-describedby` / `id` / `title` などをそのまま渡す     |
 

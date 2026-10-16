@@ -158,6 +158,12 @@ export interface IchigoCrateProps extends IchigoCrateCanvasAttributes {
   wasmUrl?: string;
   /** ピクセル拡大率 (論理 256×192 を CSS で何倍に表示するか、既定 3)。 */
   scale?: number;
+  /**
+   * canvas にフォーカスがある間、Tab キーを IchigoCrate の入力として捕捉するか (既定 true)。
+   * false にすると Tab はランナーへ渡さずブラウザのフォーカス移動に使われるため、
+   * キーボード操作だけで canvas から抜け出せる (ブログ等への埋め込み向け)。
+   */
+  captureTab?: boolean;
   className?: string;
   style?: CSSProperties;
 }
