@@ -36,7 +36,8 @@ export async function loadIchigoCrate(wasmUrl?: string): Promise<typeof IchigoCr
   if (!initPromise) {
     loadedWasmUrl = wasmUrl;
     const input = wasmUrl ? wasmUrl : decodeBase64(wasmBase64);
-    initPromise = init(input)
+    // 引数を直接渡す形式は wasm-bindgen で非推奨 (console.warn が出る) のため、オブジェクトで渡す。
+    initPromise = init({ module_or_path: input })
       .then(() => undefined)
       .catch((error) => {
         initPromise = null;
