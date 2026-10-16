@@ -23,7 +23,7 @@
   },
   "overrides": [
     {
-      "files": ["scripts/**", "*.config.ts"],
+      "files": ["scripts/**", "*.config.ts", "e2e/**"],
       "env": { "node": true },
       "rules": {
         "import/no-nodejs-modules": "off",

@@ -1,4 +1,4 @@
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import type { RefObject } from "react";
 import type { IchigoCrateHandle } from "./types";
 import { delegateHandle } from "./handle";
@@ -25,16 +25,6 @@ export interface UseIchigoCrate {
 export function useIchigoCrate(): UseIchigoCrate {
   // null 初期値で RefObject<IchigoCrateHandle> 型 (forwardRef にそのまま渡せる)。
   const ref = useRef<IchigoCrateHandle>(null);
-  const ij = useRef<IchigoCrateHandle | null>(null);
-  if (!ij.current) ij.current = createForwardingHandle(ref);
-  return { ref, ij: ij.current };
-}
-
-/**
- * ref.current (公開ハンドル) へ委譲する安定ハンドルを作る。転送ロジック自体は
- * delegateHandle と共有しているので、IchigoCrateHandle にメソッドが
- * 増減しても更新箇所は handle.ts の一箇所で済む。
- */
-function createForwardingHandle(ref: RefObject<IchigoCrateHandle>): IchigoCrateHandle {
-  return delegateHandle(() => ref.current);
+  const [ij] = useState(() => delegateHandle(() => ref.current));
+  return { ref, ij };
 }

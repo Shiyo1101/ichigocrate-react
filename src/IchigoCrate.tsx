@@ -1,35 +1,16 @@
-import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef } from "react";
+import { forwardRef, useEffect, useImperativeHandle, useMemo, useRef, useState } from "react";
 import type { IchigoCrateRunner } from "./wasm/ichigocrate_web";
 import type { IchigoCrateError, IchigoCrateHandle, IchigoCrateProps } from "./types";
+import { BORDER_COLOR_LED_OFF, bindRunnerToCanvas } from "./canvasBinding";
 import { createHandle } from "./handle";
+import { useLatestRef } from "./useLatestRef";
 import { loadIchigoCrate } from "./wasmLoader";
 
 // 論理画面サイズ (wasm 側の IMG_W/IMG_H と一致)。
 const SCREEN_W = 256;
 const SCREEN_H = 192;
 
-// ブラウザ既定動作 (スクロール/リロード/フォーカス移動) と衝突するため、canvas に
-// フォーカスがある間だけ抑止するキー。
-const PREVENT_KEYS = new Set([
-  "ArrowLeft",
-  "ArrowRight",
-  "ArrowUp",
-  "ArrowDown",
-  "Space",
-  "Tab",
-  "Enter",
-  "Backspace",
-  "F1",
-  "F2",
-  "F3",
-  "F4",
-  "F5",
-  "F6",
-  "F7",
-  "F8",
-  "F9",
-  "F10",
-]);
+const DEFAULT_SCALE = 3;
 
 /**
  * IchigoJam BASIC を 1 枚の canvas として描画する React コンポーネント。
@@ -50,7 +31,7 @@ export const IchigoCrate = forwardRef<IchigoCrateHandle, IchigoCrateProps>(funct
     storagePrefix,
     persist,
     wasmUrl,
-    scale = 3,
+    scale = DEFAULT_SCALE,
     className,
     style,
   },
@@ -58,42 +39,25 @@ export const IchigoCrate = forwardRef<IchigoCrateHandle, IchigoCrateProps>(funct
 ) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const runnerRef = useRef<IchigoCrateRunner | null>(null);
-  // 最新の onPrint/onError/onReady を ref で保持し、ランナーを作り直さず差し替えられるようにする。
-  const onPrintRef = useRef(onPrint);
-  onPrintRef.current = onPrint;
-  const onErrorRef = useRef(onError);
-  onErrorRef.current = onError;
-  const onReadyRef = useRef(onReady);
-  onReadyRef.current = onReady;
+  const onPrintRef = useLatestRef(onPrint);
+  const onErrorRef = useLatestRef(onError);
+  const onReadyRef = useLatestRef(onReady);
 
   // ランナーへ委譲する安定ハンドル。useImperativeHandle と onReady で共有する。
-  const handleRef = useRef<IchigoCrateHandle | null>(null);
-  if (!handleRef.current) {
-    handleRef.current = createHandle(() => runnerRef.current);
-  }
+  const [handle] = useState(() => createHandle(() => runnerRef.current));
   // defaultProgram/autoRun はコンポーネントの生涯で一度だけ適用する。effect の
   // 依存 (storagePrefix 等) 変化でランナーが作り直されても再適用しないためのガード。
   const appliedInitialRef = useRef(false);
 
-  useImperativeHandle(ref, () => handleRef.current as IchigoCrateHandle, []);
+  useImperativeHandle(ref, () => handle, [handle]);
 
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
 
     let cancelled = false;
-    let raf = 0;
     let runner: IchigoCrateRunner | null = null;
-
-    const onKeyDown = (e: KeyboardEvent) => {
-      // Ctrl/Cmd 併用 (コピー等) は OS/ブラウザに委ねる。
-      if (e.ctrlKey || e.metaKey) return;
-      runner?.on_key(e.code, e.shiftKey, e.altKey, true);
-      if (PREVENT_KEYS.has(e.code)) e.preventDefault();
-    };
-    const onKeyUp = (e: KeyboardEvent) => {
-      runner?.on_key(e.code, e.shiftKey, e.altKey, false);
-    };
+    let unbind: (() => void) | null = null;
 
     loadIchigoCrate(wasmUrl)
       .then((Runner) => {
@@ -110,26 +74,8 @@ export const IchigoCrate = forwardRef<IchigoCrateHandle, IchigoCrateProps>(funct
           if (autoRun) runner.run();
         }
 
-        // ランナー生成・初期プログラム適用が済み、外部制御が可能になった通知。
-        onReadyRef.current?.(handleRef.current as IchigoCrateHandle);
-
-        canvas.addEventListener("keydown", onKeyDown);
-        canvas.addEventListener("keyup", onKeyUp);
-
-        // 直前の LED 状態をキャッシュし、変化したフレームだけ style を書き換える。
-        let lastLed: boolean | null = null;
-        const frame = (t: number) => {
-          if (cancelled || !runner) return;
-          runner.tick(t);
-          const led = runner.is_led();
-          if (led !== lastLed) {
-            // 実機 LED の代わりに点灯中は枠を赤くする。
-            canvas.style.borderColor = led ? "#e62828" : "#333";
-            lastLed = led;
-          }
-          raf = requestAnimationFrame(frame);
-        };
-        raf = requestAnimationFrame(frame);
+        onReadyRef.current?.(handle);
+        unbind = bindRunnerToCanvas(canvas, runner);
       })
       .catch((error) => {
         if (cancelled) return;
@@ -138,9 +84,7 @@ export const IchigoCrate = forwardRef<IchigoCrateHandle, IchigoCrateProps>(funct
 
     return () => {
       cancelled = true;
-      cancelAnimationFrame(raf);
-      canvas.removeEventListener("keydown", onKeyDown);
-      canvas.removeEventListener("keyup", onKeyUp);
+      unbind?.();
       runnerRef.current = null;
       runner?.free();
     };
@@ -155,7 +99,7 @@ export const IchigoCrate = forwardRef<IchigoCrateHandle, IchigoCrateProps>(funct
       width: SCREEN_W * scale,
       height: SCREEN_H * scale,
       background: "#000",
-      border: "8px solid #333",
+      border: `8px solid ${BORDER_COLOR_LED_OFF}`,
       outline: "none",
       ...style,
     }),
