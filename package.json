@@ -1,6 +1,6 @@
 {
   "name": "ichigocrate-react",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "IchigoJam BASIC as a React component, running in WebAssembly.",
   "keywords": [
     "basic",
