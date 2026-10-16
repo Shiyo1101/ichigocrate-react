@@ -39,6 +39,15 @@ test("canvas へ HTML 属性を渡せ、aria-label は既定値を持つ", async
   await expect(canvas(page, "labeled")).toHaveAttribute("tabindex", "0");
 });
 
+test("wasm の初期化で非推奨 API の警告を出さない", async ({ page }) => {
+  const warnings: string[] = [];
+  page.on("console", (message) => {
+    if (message.type() === "warning") warnings.push(message.text());
+  });
+  await mount(page, [{ id: "main", persist: false }]);
+  expect(warnings.filter((text) => text.includes("deprecated"))).toEqual([]);
+});
+
 test("VRAM の内容が canvas に描画される", async ({ page }) => {
   await mount(page, [{ id: "main", persist: false }]);
   const litPixels = () =>
