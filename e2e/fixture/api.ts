@@ -10,6 +10,8 @@ export interface InstanceConfig {
   wasmUrl?: string;
   scale?: number;
   className?: string;
+  "aria-label"?: string;
+  "aria-describedby"?: string;
   /** true なら ref ではなく useIchigoCrate フック経由でハンドルを公開する。 */
   viaHook?: boolean;
 }

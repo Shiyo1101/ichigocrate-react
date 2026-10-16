@@ -12,6 +12,9 @@ const SCREEN_H = 192;
 
 const DEFAULT_SCALE = 3;
 
+/** aria-label 未指定時の canvas のアクセシブルな名前。 */
+const DEFAULT_ARIA_LABEL = "IchigoCrate";
+
 /**
  * IchigoJam BASIC を 1 枚の canvas として描画する React コンポーネント。
  *
@@ -34,6 +37,8 @@ export const IchigoCrate = forwardRef<IchigoCrateHandle, IchigoCrateProps>(funct
     scale = DEFAULT_SCALE,
     className,
     style,
+    "aria-label": ariaLabel = DEFAULT_ARIA_LABEL,
+    ...canvasAttributes
   },
   ref,
 ) {
@@ -106,5 +111,14 @@ export const IchigoCrate = forwardRef<IchigoCrateHandle, IchigoCrateProps>(funct
     [scale, style],
   );
 
-  return <canvas ref={canvasRef} tabIndex={0} className={className} style={canvasStyle} />;
+  return (
+    <canvas
+      {...canvasAttributes}
+      ref={canvasRef}
+      tabIndex={0}
+      aria-label={ariaLabel}
+      className={className}
+      style={canvasStyle}
+    />
+  );
 });
