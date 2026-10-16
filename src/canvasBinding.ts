@@ -21,6 +21,15 @@ const PREVENT_DEFAULT_KEYS = new Set([
   ...FUNCTION_KEYS,
 ]);
 
+export interface CanvasBindingOptions {
+  /**
+   * Tab キーを捕捉するかを返す。毎回最新の props を参照できるよう関数で受け取る
+   * (値の変化でランナーを作り直さないため)。false の間は Tab をランナーへ渡さず、
+   * ブラウザのフォーカス移動に委ねる。
+   */
+  shouldCaptureTab: () => boolean;
+}
+
 /**
  * canvas のキー入力と rAF ループをランナーへ配線し、解除関数を返す。
  * 解除関数はリスナを外して rAF を止めるだけで、ランナーの解放は呼び出し側が行う。
@@ -28,14 +37,18 @@ const PREVENT_DEFAULT_KEYS = new Set([
 export function bindRunnerToCanvas(
   canvas: HTMLCanvasElement,
   runner: IchigoCrateRunner,
+  { shouldCaptureTab }: CanvasBindingOptions,
 ): () => void {
+  const isReleasedTab = (e: KeyboardEvent) => e.code === "Tab" && !shouldCaptureTab();
   const onKeyDown = (e: KeyboardEvent) => {
     // Ctrl/Cmd 併用 (コピー等) は OS/ブラウザに委ねる。
     if (e.ctrlKey || e.metaKey) return;
+    if (isReleasedTab(e)) return;
     runner.on_key(e.code, e.shiftKey, e.altKey, true);
     if (PREVENT_DEFAULT_KEYS.has(e.code)) e.preventDefault();
   };
   const onKeyUp = (e: KeyboardEvent) => {
+    if (isReleasedTab(e)) return;
     runner.on_key(e.code, e.shiftKey, e.altKey, false);
   };
   canvas.addEventListener("keydown", onKeyDown);

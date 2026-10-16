@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import type { CanvasHTMLAttributes, CSSProperties } from "react";
 
 /**
  * keyDown/keyUp/BTN() で使う IchigoJam の標準ボタンのキーコード。
@@ -107,7 +107,26 @@ export interface IchigoCrateHandle {
   isKana(): boolean;
 }
 
-export interface IchigoCrateProps {
+/**
+ * canvas へそのまま渡す HTML 属性 (aria-label / aria-describedby / id / title など)。
+ * コンポーネントが管理する属性 (サイズ・フォーカス・キー入力) と、IchigoCrateProps と
+ * 名前が衝突する onError は除く。
+ */
+export type IchigoCrateCanvasAttributes = Omit<
+  CanvasHTMLAttributes<HTMLCanvasElement>,
+  | "children"
+  | "className"
+  | "dangerouslySetInnerHTML"
+  | "height"
+  | "onError"
+  | "onKeyDown"
+  | "onKeyUp"
+  | "style"
+  | "tabIndex"
+  | "width"
+>;
+
+export interface IchigoCrateProps extends IchigoCrateCanvasAttributes {
   /**
    * 起動時に投入するプログラム (改行区切り)。React の defaultValue と同じく
    * マウント時に一度だけ適用され、以降の変更は無視される (動的更新は ref /
@@ -139,6 +158,12 @@ export interface IchigoCrateProps {
   wasmUrl?: string;
   /** ピクセル拡大率 (論理 256×192 を CSS で何倍に表示するか、既定 3)。 */
   scale?: number;
+  /**
+   * canvas にフォーカスがある間、Tab キーを IchigoCrate の入力として捕捉するか (既定 true)。
+   * false にすると Tab はランナーへ渡さずブラウザのフォーカス移動に使われるため、
+   * キーボード操作だけで canvas から抜け出せる (ブログ等への埋め込み向け)。
+   */
+  captureTab?: boolean;
   className?: string;
   style?: CSSProperties;
 }

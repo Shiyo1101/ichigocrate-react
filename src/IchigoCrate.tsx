@@ -12,6 +12,9 @@ const SCREEN_H = 192;
 
 const DEFAULT_SCALE = 3;
 
+/** aria-label 未指定時の canvas のアクセシブルな名前。 */
+const DEFAULT_ARIA_LABEL = "IchigoCrate";
+
 /**
  * IchigoJam BASIC を 1 枚の canvas として描画する React コンポーネント。
  *
@@ -32,8 +35,11 @@ export const IchigoCrate = forwardRef<IchigoCrateHandle, IchigoCrateProps>(funct
     persist,
     wasmUrl,
     scale = DEFAULT_SCALE,
+    captureTab = true,
     className,
     style,
+    "aria-label": ariaLabel = DEFAULT_ARIA_LABEL,
+    ...canvasAttributes
   },
   ref,
 ) {
@@ -42,6 +48,7 @@ export const IchigoCrate = forwardRef<IchigoCrateHandle, IchigoCrateProps>(funct
   const onPrintRef = useLatestRef(onPrint);
   const onErrorRef = useLatestRef(onError);
   const onReadyRef = useLatestRef(onReady);
+  const captureTabRef = useLatestRef(captureTab);
 
   // ランナーへ委譲する安定ハンドル。useImperativeHandle と onReady で共有する。
   const [handle] = useState(() => createHandle(() => runnerRef.current));
@@ -75,7 +82,9 @@ export const IchigoCrate = forwardRef<IchigoCrateHandle, IchigoCrateProps>(funct
         }
 
         onReadyRef.current?.(handle);
-        unbind = bindRunnerToCanvas(canvas, runner);
+        unbind = bindRunnerToCanvas(canvas, runner, {
+          shouldCaptureTab: () => captureTabRef.current,
+        });
       })
       .catch((error) => {
         if (cancelled) return;
@@ -106,5 +115,14 @@ export const IchigoCrate = forwardRef<IchigoCrateHandle, IchigoCrateProps>(funct
     [scale, style],
   );
 
-  return <canvas ref={canvasRef} tabIndex={0} className={className} style={canvasStyle} />;
+  return (
+    <canvas
+      {...canvasAttributes}
+      ref={canvasRef}
+      tabIndex={0}
+      aria-label={ariaLabel}
+      className={className}
+      style={canvasStyle}
+    />
+  );
 });

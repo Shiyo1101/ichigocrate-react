@@ -115,3 +115,34 @@ test("Ctrl/Cmd 併用のキーはランナーへ渡さない", async ({ page }) 
   await page.keyboard.press("Meta+a");
   expect(await screen()).toBe(before);
 });
+
+test.describe("captureTab", () => {
+  test.beforeEach(async ({ page }) => {
+    await mount(page, [
+      { id: "released", persist: false, captureTab: false },
+      { id: "next", persist: false },
+    ]);
+  });
+
+  test("false なら Tab を捕捉せず、次の要素へフォーカスを移せる", async ({ page }) => {
+    const released = canvas(page, "released");
+    const prevented = await released.evaluate((el) => {
+      const e = new KeyboardEvent("keydown", { bubbles: true, cancelable: true, code: "Tab" });
+      el.dispatchEvent(e);
+      return e.defaultPrevented;
+    });
+    expect(prevented).toBe(false);
+
+    await released.focus();
+    await page.keyboard.press("Tab");
+    await expect(canvas(page, "next")).toBeFocused();
+  });
+
+  test("false でも Tab 以外のキーはランナーへ届く", async ({ page }) => {
+    await exec(page, "released", "KBD 0");
+    await canvas(page, "released").focus();
+    await page.keyboard.type("a=5");
+    await page.keyboard.press("Enter");
+    expect(await getVar(page, "released", "A")).toBe(5);
+  });
+});

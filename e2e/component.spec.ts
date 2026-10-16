@@ -22,6 +22,23 @@ test("canvas は論理 256x192 を scale 倍で表示する", async ({ page }) =
   await expect(canvas(page, "scaled")).toHaveClass("custom");
 });
 
+test("canvas へ HTML 属性を渡せ、aria-label は既定値を持つ", async ({ page }) => {
+  await mount(page, [
+    { id: "default", persist: false },
+    {
+      id: "labeled",
+      persist: false,
+      "aria-label": "サンプルプログラムの実行画面",
+      "aria-describedby": "description",
+    },
+  ]);
+  await expect(canvas(page, "default")).toHaveAccessibleName("IchigoCrate");
+  await expect(canvas(page, "labeled")).toHaveAccessibleName("サンプルプログラムの実行画面");
+  await expect(canvas(page, "labeled")).toHaveAttribute("aria-describedby", "description");
+  // コンポーネントが管理する属性は維持される。
+  await expect(canvas(page, "labeled")).toHaveAttribute("tabindex", "0");
+});
+
 test("VRAM の内容が canvas に描画される", async ({ page }) => {
   await mount(page, [{ id: "main", persist: false }]);
   const litPixels = () =>
