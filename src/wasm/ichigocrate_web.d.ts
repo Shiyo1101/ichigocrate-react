@@ -82,8 +82,12 @@ export class IchigoCrateRunner {
      *
      * 物理キー位置で keymap を引くため、`KBD` コマンドの US/JA 切替が OS の
      * 入力レイアウトに依らず効く。
+     *
+     * `caps_lock` は `KeyboardEvent.getModifierState("CapsLock")` を渡す (省略可)。
+     * macOS のブラウザは CapsLock の keydown/keyup が不規則なので、押下ではなく
+     * 状態の変化で CAPS を反転する。
      */
-    on_key(code: string, shift: boolean, alt: boolean, pressed: boolean): void;
+    on_key(code: string, shift: boolean, alt: boolean, pressed: boolean, caps_lock?: boolean | null): void;
     /**
      * メモリ (PEEK 相当) を読む。
      */
@@ -126,18 +130,20 @@ export interface InitOutput {
     readonly ichigocraterunner_new: (a: any, b: number, c: number, d: number) => [number, number, number];
     readonly ichigocraterunner_onError: (a: number, b: number) => void;
     readonly ichigocraterunner_onPrint: (a: number, b: number) => void;
-    readonly ichigocraterunner_on_key: (a: number, b: number, c: number, d: number, e: number, f: number) => void;
+    readonly ichigocraterunner_on_key: (a: number, b: number, c: number, d: number, e: number, f: number, g: number) => void;
     readonly ichigocraterunner_peek: (a: number, b: number) => number;
     readonly ichigocraterunner_reset: (a: number) => void;
     readonly ichigocraterunner_run: (a: number) => void;
     readonly ichigocraterunner_tick: (a: number, b: number) => void;
     readonly ichigocraterunner_type: (a: number, b: number, c: number) => void;
+    readonly wasm_bindgen__convert__closures_____invoke__h834e7ce78e6202b8: (a: number, b: number, c: any) => [number, number];
     readonly __wbindgen_exn_store: (a: number) => void;
     readonly __externref_table_alloc: () => number;
     readonly __wbindgen_externrefs: WebAssembly.Table;
     readonly __wbindgen_free: (a: number, b: number, c: number) => void;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
     readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;
+    readonly __wbindgen_destroy_closure: (a: number, b: number) => void;
     readonly __externref_table_dealloc: (a: number) => void;
     readonly __wbindgen_start: () => void;
 }
